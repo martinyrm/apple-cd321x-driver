@@ -6,7 +6,9 @@ Extension of the tipd kernel module for VDM functionality on M chipset Macs. All
 	* Target reboot
 	* Sending the CD321x unlock key
 
-
+## TODO:
+	* Unlock key is currently hard-coded (for M1 MBA), calculate from model number
+ 	* Extend for UART/debug support 
 
 
 
