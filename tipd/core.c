@@ -20,7 +20,7 @@
 #include <linux/workqueue.h>
 #include <linux/firmware.h>
 #include <linux/sysfs.h>
-
+#include <linux/string.h>
 #include "tps6598x.h"
 #include "trace.h"
 
@@ -99,6 +99,7 @@ enum {
 	TPS_MODE_BIST,
 	TPS_MODE_DISC,
 	TPS_MODE_PTCH,
+	CD_MODE_DBMA
 };
 
 static const char *const modes[] = {
@@ -107,15 +108,13 @@ static const char *const modes[] = {
 	[TPS_MODE_BIST]	= "BIST",
 	[TPS_MODE_DISC]	= "DISC",
 	[TPS_MODE_PTCH] = "PTCH",
+	[CD_MODE_DBMA]  = "DBMa"
 };
 
 /* Unrecognized commands will be replaced with "!CMD" */
 #define INVALID_CMD(_cmd_)		(_cmd_ == 0x444d4321)
 
 struct tps6598x;
-static void unlock_cd321x(struct device *dev);
-static void cd321x_mode(struct device *dev, char *mode);
-static void cd321x_vdm(struct device *dev, u32 msg[]);
 
 struct tipd_data {
 	irq_handler_t irq_handler;
@@ -150,57 +149,6 @@ struct tps6598x {
 	struct delayed_work	wq_poll;
 
 	const struct tipd_data *data;
-};
-
-
-static ssize_t test_show(struct device *dev, struct device_attribute *attr,
-			 char *buf)
-{
-	return sysfs_emit(buf,"0\n");
-}
-
-static ssize_t test_store(struct device *dev, struct device_attribute *attr,
-			  const char *buf, size_t count)
-{	
-	pr_err("Attempting to unlock");
-	unlock_cd321x(dev);
-	
-	return count;
-}
-
-static DEVICE_ATTR_RW(test);
-
-static ssize_t reboot_show(struct device *dev, struct device_attribute *attr,
-			 char *buf)
-{
-	return sysfs_emit(buf,"0\n");
-}
-
-static ssize_t reboot_store(struct device *dev, struct device_attribute *attr,
-			  const char *buf, size_t count)
-{
-	char *mode = "\x01";
-	u32 vdm[] = {0x5ac8012, 0x105, 0x80000000}; 
-	unlock_cd321x(dev);
-	cd321x_mode(dev, mode);
-	cd321x_vdm(dev, vdm);
-
-	return count;
-}
-
-static DEVICE_ATTR_RW(reboot);
-
-
-static struct attribute *vdm_attrs[] = {
-	&dev_attr_test.attr,
-	&dev_attr_reboot.attr,
-	NULL,
-};
-
-static const struct attribute_group vdm_group = {
-        .name = "cd321x_vdm",
-	.attrs = vdm_attrs,
-
 };
 
 static enum power_supply_property tps6598x_psy_props[] = {
@@ -250,8 +198,7 @@ tps6598x_block_read(struct tps6598x *tps, u8 reg, void *val, size_t len)
 
 static int tps6598x_block_write(struct tps6598x *tps, u8 reg,
 				const void *val, size_t len)
-{
-	
+{	
 	u8 data[TPS_MAX_LEN + 1];
 
 	if (len + 1 > sizeof(data))
@@ -336,7 +283,6 @@ static void tps6598x_set_data_role(struct tps6598x *tps,
 
 static int tps6598x_connect(struct tps6598x *tps, u32 status)
 {
-	pr_err("Connecting to cd321x!");
 	struct typec_partner_desc desc;
 	enum typec_pwr_opmode mode;
 	int ret;
@@ -795,6 +741,8 @@ static int tps6598x_check_mode(struct tps6598x *tps)
 		return ret;
 	case TPS_MODE_BIST:
 	case TPS_MODE_DISC:
+	case CD_MODE_DBMA:
+		return ret;
 	default:
 		dev_err(tps->dev, "controller in unsupported mode \"%s\"\n",
 			mode);
@@ -1271,6 +1219,173 @@ release_fw:
 	return ret;
 };
 
+
+static u32 cd321x_get_key(void) 
+{
+	int ret;
+	const char *dt_entry;
+	struct device_node *dt_root;
+
+	dt_root = of_find_node_opts_by_path("/", NULL);
+	ret = of_property_read_string_index(dt_root, "compatible", 0, &dt_entry);
+	if (ret) {
+		pr_err("Failed reading device tree");
+		return -EINVAL;
+	}
+	else {
+		pr_err("%s\n", dt_entry);
+	}
+
+	if (strlen(dt_entry) != 10) {
+		pr_err("Invalid string from device tree");
+		return -EINVAL;
+	}
+
+	u32 key = ('J' << 24) | (dt_entry[7] << 16) | (dt_entry[8] << 8) | dt_entry[9];
+	pr_err("%d", key);
+	return key;
+}
+
+static int cd321x_unlock(struct tps6598x *tps)
+{
+        int ret;
+        u32 key;
+
+	key = cd321x_get_key();
+
+	if (!key) {
+		pr_err("Could not fetch device unlock key");
+		return -EINVAL;
+	}
+
+	ret = tps6598x_exec_cmd(tps, "LOCK", sizeof(key), (u8 *)&key, 0, NULL);
+
+	if (ret) {
+	    pr_err("Unlock command failed or device is already unlocked");
+	    pr_err("%d", ret);
+	    return -EIO;
+	}
+	return 0;
+}
+
+
+static int cd321x_set_dbma(struct tps6598x *tps) 
+{
+        int ret;
+	int mode;
+
+        ret = tps6598x_exec_cmd(tps, "DBMa", 1, "\x01", 0, NULL);
+	mode = tps6598x_check_mode(tps);
+	
+	if (mode == CD_MODE_DBMA) {
+		return 0;
+	}
+	else {	
+		//dev_err(tps->dev, "CD321x failed to enter DBMa mode, device is likely in locked state");
+		pr_err("CD321x failed to enter DBMa mode");
+		return -EINVAL;
+	     }
+	
+}
+
+static void cd321x_vdm(struct tps6598x *tps, u32 *msg, size_t vdm_len)
+{
+        int ret;
+		
+        u8 vdm[13];
+        u8 header = 0x33;
+
+        memcpy(&vdm[0], &header, 1);
+        memcpy(&vdm[1], msg, vdm_len);
+	
+	for (int i = 0; i < vdm_len + 1; i++) {
+		pr_err("0x%x", vdm[i]);
+	}
+	//ret = tps6598x_exec_cmd(tps, "VDMs", sizeof(msg), vdm_header, 0, NULL);
+        ret = tps6598x_exec_cmd(tps, "VDMs", vdm_len + 1, &vdm[0], 0, NULL);
+}
+
+static void cd321x_serial(struct tps6598x *tps) 
+{
+	int ret;
+	u32 key = 0x1840306;
+	size_t key_len = sizeof(key);
+
+	ret = tps6598x_exec_cmd(tps, "DVEn", key_len, (u8 *)&key, 0, NULL);
+
+	if (ret) {
+		pr_err("%d", ret);
+	}
+
+}
+static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
+			 char *buf)
+{
+	//TODO: add output here
+	return sysfs_emit(buf,"0\n");
+}
+
+static ssize_t serial_store(struct device *dev, struct device_attribute *attr,
+			  const char *buf, size_t count)
+{
+	
+	struct i2c_client *client = to_i2c_client(dev);
+	struct tps6598x *tps = i2c_get_clientdata(client);
+	int ret; //TODO: add return value checks for function invocations below
+	
+	u32 vdm[] = {0x5ac8012, 0x1840306};
+
+	pr_err("Entering serial mode on target");
+	ret = cd321x_unlock(tps);
+	if (ret) {
+		pr_err("");
+	}
+	ret = cd321x_set_dbma(tps);
+	cd321x_vdm(tps, vdm, sizeof(vdm));
+
+	pr_err("Attempting to enter local serial");
+        cd321x_serial(tps); 		
+	return count;
+}
+
+static DEVICE_ATTR_RW(serial);
+
+static ssize_t reboot_show(struct device *dev, struct device_attribute *attr,
+			 char *buf)
+{
+	return sysfs_emit(buf,"0\n");
+}
+
+static ssize_t reboot_store(struct device *dev, struct device_attribute *attr,
+			  const char *buf, size_t count)
+{
+	struct i2c_client *client = to_i2c_client(dev);
+	struct tps6598x *tps = i2c_get_clientdata(client);
+
+	u32 vdm[] = {0x5ac8012, 0x105, 0x80000000};
+	cd321x_unlock(tps);
+	cd321x_set_dbma(tps);
+	cd321x_vdm(tps, vdm, sizeof(vdm));
+
+	return count;
+}
+
+static DEVICE_ATTR_RW(reboot);
+
+
+static struct attribute *vdm_attrs[] = {
+	&dev_attr_serial.attr,
+	&dev_attr_reboot.attr,
+	NULL,
+};
+
+static const struct attribute_group vdm_group = {
+        .name = "cd321x_vdm",
+	.attrs = vdm_attrs,
+
+};
+
+
 static int cd321x_init(struct tps6598x *tps)
 {
 	return 0;
@@ -1611,64 +1726,8 @@ static int __maybe_unused tps6598x_resume(struct device *dev)
 	return 0;
 }
 
-
-static u32 cd321x_get_key(void) 
-{
-        u32 key = 1244868915;
-	return key;
-}
-
-static void unlock_cd321x(struct device *dev)
-{
-        struct i2c_client *client = to_i2c_client(dev);
-	struct tps6598x *tps = i2c_get_clientdata(client);
-        int ret;
-        u32 key;
-	key = cd321x_get_key();
-	size_t key_len = sizeof(key);
-
-	ret = tps6598x_exec_cmd(tps, "LOCK", key_len, (u8 *)&key, 0, NULL);
-
-	if (ret) {
-	    pr_err("Unlock failed");
-	}	
-}
-
-
-static void cd321x_mode(struct device *dev, char *mode) 
-{
-        struct i2c_client *client = to_i2c_client(dev);
-	struct tps6598x *tps = i2c_get_clientdata(client);
-
-        int ret;
-	pr_err("Switching  mode");
-        char mode_read[5] = { };
-        ret = tps6598x_read32(tps, TPS_REG_MODE, (void *)mode_read);
-	pr_err("Old: %s",mode_read);	
-        ret = tps6598x_exec_cmd(tps, "DBMa", 1, mode, 0, NULL);
-	ret = tps6598x_read32(tps, TPS_REG_MODE, (void *)mode_read);
-	pr_err("New: %s", mode_read);
-}
-
-static void cd321x_vdm(struct device *dev, u32 msg[])
-{
-        struct i2c_client *client = to_i2c_client(dev);
-	struct tps6598x *tps = i2c_get_clientdata(client);
-
-        int ret;
-	//u32 msg2[] = {0x5ac8012, 0x105, 0x80000000};
-        u8 vdm[13];
-        u8 *vdm_header = &vdm[0];
-	u8 *vdm_data = vdm_header + 1;
-        u8 header = 0x33;
-
-        memcpy(vdm_header, &header, 1);
-        memcpy(vdm_data, msg, 12);
-
-	size_t vdm_len = sizeof(vdm);
-
-        ret = tps6598x_exec_cmd(tps, "VDMs", vdm_len, vdm_header, 0, NULL);
-} 
+//Read model number of machine from the device tree and derive CD321x unlock key
+ 
 
 static const struct dev_pm_ops tps6598x_pm_ops = {
 	SET_SYSTEM_SLEEP_PM_OPS(tps6598x_suspend, tps6598x_resume)
