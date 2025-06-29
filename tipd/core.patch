@@ -1,5 +1,5 @@
 --- /home/martinr/Downloads/core-asahi.c	2025-06-29 14:22:24.998000712 +0100
-+++ drivers/usb/typec/tipd/core.c	2025-06-29 14:17:24.369465985 +0100
++++ linux/drivers/usb/typec/tipd/core.c	2025-06-29 15:40:53.286002957 +0100
 @@ -19,6 +19,8 @@
  #include <linux/usb/role.h>
  #include <linux/workqueue.h>
@@ -42,7 +42,7 @@
  	default:
  		dev_err(tps->dev, "controller in unsupported mode \"%s\"\n",
  			mode);
-@@ -1197,6 +1204,172 @@
+@@ -1197,6 +1204,171 @@
  	return ret;
  }
  
@@ -159,7 +159,6 @@
 +	
 +	struct i2c_client *client = to_i2c_client(dev);
 +	struct tps6598x *tps = i2c_get_clientdata(client);
-+	int ret;
 +
 +	u32 vdm[] = {0x5ac8012, 0x1840306};
 +
@@ -215,7 +214,7 @@
  static int cd321x_init(struct tps6598x *tps)
  {
  	return 0;
-@@ -1227,6 +1400,7 @@
+@@ -1227,6 +1399,7 @@
  
  static int cd321x_reset(struct tps6598x *tps)
  {
@@ -223,7 +222,7 @@
  	return 0;
  }
  
-@@ -1346,6 +1520,7 @@
+@@ -1346,6 +1519,7 @@
  			APPLE_CD_REG_INT_DATA_STATUS_UPDATE |
  			APPLE_CD_REG_INT_PLUG_EVENT;
  
@@ -231,8 +230,17 @@
  	} else {
  		/* Enable power status, data status and plug event interrupts */
  		mask1 = TPS_REG_INT_POWER_STATUS_UPDATE |
-@@ -1353,6 +1528,14 @@
+@@ -1353,6 +1527,8 @@
  			TPS_REG_INT_PLUG_EVENT;
+ 	}
+ 
++	
++
+ 	tps->data = i2c_get_match_data(client);
+ 	if (!tps->data)
+ 		return -EINVAL;
+@@ -1437,6 +1613,14 @@
+ 		enable_irq_wake(client->irq);
  	}
  
 +	if (device_is_compatible(tps->dev, "apple,cd321x")) {
@@ -243,10 +251,21 @@
 +		}
 +	}
 +
- 	tps->data = i2c_get_match_data(client);
- 	if (!tps->data)
- 		return -EINVAL;
-@@ -1471,6 +1654,9 @@
+ 	return 0;
+ 
+ err_disconnect:
+@@ -1453,6 +1637,10 @@
+ 	/* Reset PD controller to remove any applied patch */
+ 	tps->data->reset(tps);
+ 
++	if (device_is_compatible(tps->dev, "apple,cd321x"))  {
++		sysfs_remove_group(&client->dev.kobj, &vdm_group);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -1471,6 +1659,9 @@
  
  	/* Reset PD controller to remove any applied patch */
  	tps->data->reset(tps);
