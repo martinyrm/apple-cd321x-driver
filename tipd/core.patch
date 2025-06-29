@@ -1,5 +1,5 @@
 --- /home/martinr/Downloads/core-asahi.c	2025-06-29 14:22:24.998000712 +0100
-+++ linux/drivers/usb/typec/tipd/core.c	2025-06-29 15:40:53.286002957 +0100
++++ linux/drivers/usb/typec/tipd/core.c	2025-06-29 17:12:55.836000713 +0100
 @@ -19,6 +19,8 @@
  #include <linux/usb/role.h>
  #include <linux/workqueue.h>
@@ -59,13 +59,13 @@
 +		return -EINVAL;
 +	}
 +	else {
-+		dev_info(tps->dev, "Returned model string: %s\n", dt_entry);
++		dev_info(tps->dev, "DT returned model string: %s\n", dt_entry);
 +	}
 +
-+	//if (strlen(dt_entry) != 10) {
-+	//	dev_err(tps->dev, "Device tree returned string of unexpected length");
-+	//	return -EINVAL;
-+	//}
++	if (strlen(dt_entry) < 10) {
++		dev_err(tps->dev, "Device tree returned string of unexpected length");
++		return -EINVAL;
++	}
 +
 +	u32 key = ('J' << 24) | (dt_entry[7] << 16) | (dt_entry[8] << 8) | dt_entry[9];
 +	return key;
@@ -149,7 +149,7 @@
 +static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
 +			 char *buf)
 +{
-+	//TODO: add output here
++	
 +	return sysfs_emit(buf,"0\n");
 +}
 +
@@ -254,18 +254,7 @@
  	return 0;
  
  err_disconnect:
-@@ -1453,6 +1637,10 @@
- 	/* Reset PD controller to remove any applied patch */
- 	tps->data->reset(tps);
- 
-+	if (device_is_compatible(tps->dev, "apple,cd321x"))  {
-+		sysfs_remove_group(&client->dev.kobj, &vdm_group);
-+	}
-+
- 	return ret;
- }
- 
-@@ -1471,6 +1659,9 @@
+@@ -1471,6 +1655,9 @@
  
  	/* Reset PD controller to remove any applied patch */
  	tps->data->reset(tps);
