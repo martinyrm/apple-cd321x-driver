@@ -26,31 +26,31 @@
 #include "trace.h"
 
 /* Register offsets */
-#define TPS_REG_VID			0x00
-#define TPS_REG_MODE			0x03
-#define TPS_REG_CMD1			0x08
-#define TPS_REG_DATA1			0x09
-#define TPS_REG_VERSION			0x0F
-#define TPS_REG_INT_EVENT1		0x14
-#define TPS_REG_INT_EVENT2		0x15
-#define TPS_REG_INT_MASK1		0x16
-#define TPS_REG_INT_MASK2		0x17
-#define TPS_REG_INT_CLEAR1		0x18
-#define TPS_REG_INT_CLEAR2		0x19
-#define TPS_REG_SYSTEM_POWER_STATE	0x20
-#define TPS_REG_STATUS			0x1a
-#define TPS_REG_SYSTEM_CONF		0x28
-#define TPS_REG_CTRL_CONF		0x29
-#define TPS_REG_BOOT_STATUS		0x2D
-#define TPS_REG_POWER_STATUS		0x3f
-#define TPS_REG_PD_STATUS		0x40
-#define TPS_REG_RX_IDENTITY_SOP		0x48
-#define TPS_REG_DATA_STATUS		0x5f
-#define TPS_REG_SLEEP_CONF		0x70
-#define TPS_REG_VDM_DATA		0x4d
+#define TPS_REG_VID 0x00
+#define TPS_REG_MODE 0x03
+#define TPS_REG_CMD1 0x08
+#define TPS_REG_DATA1 0x09
+#define TPS_REG_VERSION 0x0F
+#define TPS_REG_INT_EVENT1 0x14
+#define TPS_REG_INT_EVENT2 0x15
+#define TPS_REG_INT_MASK1 0x16
+#define TPS_REG_INT_MASK2 0x17
+#define TPS_REG_INT_CLEAR1 0x18
+#define TPS_REG_INT_CLEAR2 0x19
+#define TPS_REG_SYSTEM_POWER_STATE 0x20
+#define TPS_REG_STATUS 0x1a
+#define TPS_REG_SYSTEM_CONF 0x28
+#define TPS_REG_CTRL_CONF 0x29
+#define TPS_REG_BOOT_STATUS 0x2D
+#define TPS_REG_POWER_STATUS 0x3f
+#define TPS_REG_PD_STATUS 0x40
+#define TPS_REG_RX_IDENTITY_SOP 0x48
+#define TPS_REG_DATA_STATUS 0x5f
+#define TPS_REG_SLEEP_CONF 0x70
+#define TPS_REG_VDM_DATA 0x4d
 
 /* TPS_REG_SYSTEM_CONF bits */
-#define TPS_SYSCONF_PORTINFO(c)		((c) & 7)
+#define TPS_SYSCONF_PORTINFO(c) ((c) & 7)
 
 /*
  * BPMs task timeout, recommended 5 seconds
@@ -58,29 +58,28 @@
  * Manual (Rev. A)
  * https://www.ti.com/lit/ug/slvuc05a/slvuc05a.pdf
  */
-#define TPS_BUNDLE_TIMEOUT	0x32
+#define TPS_BUNDLE_TIMEOUT 0x32
 
 /* BPMs return code */
-#define TPS_TASK_BPMS_INVALID_BUNDLE_SIZE	0x4
-#define TPS_TASK_BPMS_INVALID_SLAVE_ADDR	0x5
-#define TPS_TASK_BPMS_INVALID_TIMEOUT		0x6
+#define TPS_TASK_BPMS_INVALID_BUNDLE_SIZE 0x4
+#define TPS_TASK_BPMS_INVALID_SLAVE_ADDR 0x5
+#define TPS_TASK_BPMS_INVALID_TIMEOUT 0x6
 
 /* PBMc data out */
-#define TPS_PBMC_RC	0 /* Return code */
-#define TPS_PBMC_DPCS	2 /* device patch complete status */
+#define TPS_PBMC_RC 0 /* Return code */
+#define TPS_PBMC_DPCS 2 /* device patch complete status */
 
 /* reset de-assertion to ready for operation */
-#define TPS_SETUP_MS			1000
+#define TPS_SETUP_MS 1000
 
-enum {
-	TPS_PORTINFO_SINK,
-	TPS_PORTINFO_SINK_ACCESSORY,
-	TPS_PORTINFO_DRP_UFP,
-	TPS_PORTINFO_DRP_UFP_DRD,
-	TPS_PORTINFO_DRP_DFP,
-	TPS_PORTINFO_DRP_DFP_DRD,
-	TPS_PORTINFO_SOURCE,
-};
+		enum { TPS_PORTINFO_SINK,
+		       TPS_PORTINFO_SINK_ACCESSORY,
+		       TPS_PORTINFO_DRP_UFP,
+		       TPS_PORTINFO_DRP_UFP_DRD,
+		       TPS_PORTINFO_DRP_DFP,
+		       TPS_PORTINFO_DRP_DFP_DRD,
+		       TPS_PORTINFO_SOURCE,
+		};
 
 /* TPS_REG_RX_IDENTITY_SOP */
 struct tps6598x_rx_identity_reg {
@@ -89,8 +88,8 @@ struct tps6598x_rx_identity_reg {
 } __packed;
 
 /* Standard Task return codes */
-#define TPS_TASK_TIMEOUT		1
-#define TPS_TASK_REJECTED		3
+#define TPS_TASK_TIMEOUT 1
+#define TPS_TASK_REJECTED 3
 
 enum {
 	TPS_MODE_APP,
@@ -102,16 +101,13 @@ enum {
 };
 
 static const char *const modes[] = {
-	[TPS_MODE_APP]	= "APP ",
-	[TPS_MODE_BOOT]	= "BOOT",
-	[TPS_MODE_BIST]	= "BIST",
-	[TPS_MODE_DISC]	= "DISC",
-	[TPS_MODE_PTCH] = "PTCH",
-	[CD_MODE_DBMA] = "DBMa",
+	[TPS_MODE_APP] = "APP ",  [TPS_MODE_BOOT] = "BOOT",
+	[TPS_MODE_BIST] = "BIST", [TPS_MODE_DISC] = "DISC",
+	[TPS_MODE_PTCH] = "PTCH", [CD_MODE_DBMA] = "DBMa",
 };
 
 /* Unrecognized commands will be replaced with "!CMD" */
-#define INVALID_CMD(_cmd_)		(_cmd_ == 0x444d4321)
+#define INVALID_CMD(_cmd_) (_cmd_ == 0x444d4321)
 
 struct tps6598x;
 
@@ -123,13 +119,14 @@ struct tipd_data {
 	int (*apply_patch)(struct tps6598x *tps);
 	int (*init)(struct tps6598x *tps);
 	int (*reset)(struct tps6598x *tps);
+	bool enable_apple_vdm;
 };
 
 struct tps6598x {
 	struct device *dev;
 	struct regmap *regmap;
 	struct mutex lock; /* device lock */
-	u8 i2c_protocol:1;
+	u8 i2c_protocol : 1;
 
 	struct gpio_desc *reset;
 	struct typec_port *port;
@@ -145,7 +142,7 @@ struct tps6598x {
 	int wakeup;
 	u32 status; /* status reg */
 	u16 pwr_status;
-	struct delayed_work	wq_poll;
+	struct delayed_work wq_poll;
 
 	const struct tipd_data *data;
 };
@@ -161,10 +158,10 @@ static const char *tps6598x_psy_name_prefix = "tps6598x-source-psy-";
  * Max data bytes for Data1, Data2, and other registers. See ch 1.3.2:
  * https://www.ti.com/lit/ug/slvuan1a/slvuan1a.pdf
  */
-#define TPS_MAX_LEN	64
+#define TPS_MAX_LEN 64
 
-static int
-tps6598x_block_read(struct tps6598x *tps, u8 reg, void *val, size_t len)
+static int tps6598x_block_read(struct tps6598x *tps, u8 reg, void *val,
+			       size_t len)
 {
 	u8 data[TPS_MAX_LEN + 1];
 	int ret;
@@ -190,8 +187,8 @@ tps6598x_block_read(struct tps6598x *tps, u8 reg, void *val, size_t len)
 	return 0;
 }
 
-static int tps6598x_block_write(struct tps6598x *tps, u8 reg,
-				const void *val, size_t len)
+static int tps6598x_block_write(struct tps6598x *tps, u8 reg, const void *val,
+				size_t len)
 {
 	u8 data[TPS_MAX_LEN + 1];
 
@@ -237,8 +234,8 @@ static inline int tps6598x_write64(struct tps6598x *tps, u8 reg, u64 val)
 	return tps6598x_block_write(tps, reg, &val, sizeof(u64));
 }
 
-static inline int
-tps6598x_write_4cc(struct tps6598x *tps, u8 reg, const char *val)
+static inline int tps6598x_write_4cc(struct tps6598x *tps, u8 reg,
+				     const char *val)
 {
 	return tps6598x_block_write(tps, reg, val, 4);
 }
@@ -248,8 +245,8 @@ static int tps6598x_read_partner_identity(struct tps6598x *tps)
 	struct tps6598x_rx_identity_reg id;
 	int ret;
 
-	ret = tps6598x_block_read(tps, TPS_REG_RX_IDENTITY_SOP,
-				  &id, sizeof(id));
+	ret = tps6598x_block_read(tps, TPS_REG_RX_IDENTITY_SOP, &id,
+				  sizeof(id));
 	if (ret)
 		return ret;
 
@@ -329,15 +326,16 @@ static void tps6598x_disconnect(struct tps6598x *tps, u32 status)
 	typec_set_vconn_role(tps->port, TPS_STATUS_TO_TYPEC_VCONN(status));
 	typec_set_orientation(tps->port, TYPEC_ORIENTATION_NONE);
 	typec_set_mode(tps->port, TYPEC_STATE_SAFE);
-	tps6598x_set_data_role(tps, TPS_STATUS_TO_TYPEC_DATAROLE(status), false);
+	tps6598x_set_data_role(tps, TPS_STATUS_TO_TYPEC_DATAROLE(status),
+			       false);
 
 	power_supply_changed(tps->psy);
 }
 
 static int tps6598x_exec_cmd_tmo(struct tps6598x *tps, const char *cmd,
-			     size_t in_len, const u8 *in_data,
-			     size_t out_len, u8 *out_data,
-			     u32 cmd_timeout_ms, u32 res_delay_ms)
+				 size_t in_len, const u8 *in_data,
+				 size_t out_len, u8 *out_data,
+				 u32 cmd_timeout_ms, u32 res_delay_ms)
 {
 	unsigned long timeout;
 	u32 val;
@@ -350,8 +348,7 @@ static int tps6598x_exec_cmd_tmo(struct tps6598x *tps, const char *cmd,
 		return -EBUSY;
 
 	if (in_len) {
-		ret = tps6598x_block_write(tps, TPS_REG_DATA1,
-					   in_data, in_len);
+		ret = tps6598x_block_write(tps, TPS_REG_DATA1, in_data, in_len);
 		if (ret)
 			return ret;
 	}
@@ -377,8 +374,8 @@ static int tps6598x_exec_cmd_tmo(struct tps6598x *tps, const char *cmd,
 	mdelay(res_delay_ms);
 
 	if (out_len) {
-		ret = tps6598x_block_read(tps, TPS_REG_DATA1,
-					  out_data, out_len);
+		ret = tps6598x_block_read(tps, TPS_REG_DATA1, out_data,
+					  out_len);
 		if (ret)
 			return ret;
 		val = out_data[0];
@@ -401,11 +398,11 @@ static int tps6598x_exec_cmd_tmo(struct tps6598x *tps, const char *cmd,
 }
 
 static int tps6598x_exec_cmd(struct tps6598x *tps, const char *cmd,
-			     size_t in_len, const u8 *in_data,
-			     size_t out_len, u8 *out_data)
+			     size_t in_len, const u8 *in_data, size_t out_len,
+			     u8 *out_data)
 {
-	return tps6598x_exec_cmd_tmo(tps, cmd, in_len, in_data,
-				     out_len, out_data, 1000, 0);
+	return tps6598x_exec_cmd_tmo(tps, cmd, in_len, in_data, out_len,
+				     out_data, 1000, 0);
 }
 
 static int tps6598x_dr_set(struct typec_port *port, enum typec_data_role role)
@@ -479,7 +476,8 @@ static bool tps6598x_read_status(struct tps6598x *tps, u32 *status)
 
 	ret = tps6598x_read32(tps, TPS_REG_STATUS, status);
 	if (ret) {
-		dev_err(tps->dev, "%s: failed to read status: %d\n", __func__, ret);
+		dev_err(tps->dev, "%s: failed to read status: %d\n", __func__,
+			ret);
 		return false;
 	}
 
@@ -589,7 +587,7 @@ static bool tps6598x_has_role_changed(struct tps6598x *tps, u32 status)
 static irqreturn_t tps25750_interrupt(int irq, void *data)
 {
 	struct tps6598x *tps = data;
-	u64 event[2] = { };
+	u64 event[2] = {};
 	u32 status;
 	int ret;
 
@@ -642,8 +640,8 @@ static irqreturn_t tps6598x_interrupt(int irq, void *data)
 {
 	int intev_len = TPS_65981_2_6_INTEVENT_LEN;
 	struct tps6598x *tps = data;
-	u64 event1[2] = { };
-	u64 event2[2] = { };
+	u64 event1[2] = {};
+	u64 event2[2] = {};
 	u32 version;
 	u32 status;
 	int ret;
@@ -704,20 +702,20 @@ err_unlock:
 }
 
 /* Time interval for Polling */
-#define POLL_INTERVAL	500 /* msecs */
+#define POLL_INTERVAL 500 /* msecs */
 static void tps6598x_poll_work(struct work_struct *work)
 {
-	struct tps6598x *tps = container_of(to_delayed_work(work),
-					    struct tps6598x, wq_poll);
+	struct tps6598x *tps =
+		container_of(to_delayed_work(work), struct tps6598x, wq_poll);
 
 	tps->data->irq_handler(0, tps);
-	queue_delayed_work(system_power_efficient_wq,
-			   &tps->wq_poll, msecs_to_jiffies(POLL_INTERVAL));
+	queue_delayed_work(system_power_efficient_wq, &tps->wq_poll,
+			   msecs_to_jiffies(POLL_INTERVAL));
 }
 
 static int tps6598x_check_mode(struct tps6598x *tps)
 {
-	char mode[5] = { };
+	char mode[5] = {};
 	int ret;
 
 	ret = tps6598x_read32(tps, TPS_REG_MODE, (void *)mode);
@@ -773,7 +771,8 @@ static int tps6598x_psy_get_prop(struct power_supply *psy,
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_USB_TYPE:
-		if (TPS_POWER_STATUS_PWROPMODE(tps->pwr_status) == TYPEC_PWR_MODE_PD)
+		if (TPS_POWER_STATUS_PWROPMODE(tps->pwr_status) ==
+		    TYPEC_PWR_MODE_PD)
 			val->intval = POWER_SUPPLY_USB_TYPE_PD;
 		else
 			val->intval = POWER_SUPPLY_USB_TYPE_C;
@@ -801,7 +800,8 @@ static int cd321x_switch_power_state(struct tps6598x *tps, u8 target_state)
 	if (state == target_state)
 		return 0;
 
-	ret = tps6598x_exec_cmd(tps, "SSPS", sizeof(u8), &target_state, 0, NULL);
+	ret = tps6598x_exec_cmd(tps, "SSPS", sizeof(u8), &target_state, 0,
+				NULL);
 	if (ret)
 		return ret;
 
@@ -824,8 +824,8 @@ static int devm_tps6598_psy_register(struct tps6598x *tps)
 	psy_cfg.drv_data = tps;
 	psy_cfg.fwnode = dev_fwnode(tps->dev);
 
-	psy_name = devm_kasprintf(tps->dev, GFP_KERNEL, "%s%s", tps6598x_psy_name_prefix,
-				  port_dev_name);
+	psy_name = devm_kasprintf(tps->dev, GFP_KERNEL, "%s%s",
+				  tps6598x_psy_name_prefix, port_dev_name);
 	if (!psy_name)
 		return -ENOMEM;
 
@@ -839,17 +839,17 @@ static int devm_tps6598_psy_register(struct tps6598x *tps)
 
 	tps->usb_type = POWER_SUPPLY_USB_TYPE_C;
 
-	tps->psy = devm_power_supply_register(tps->dev, &tps->psy_desc,
-					       &psy_cfg);
+	tps->psy =
+		devm_power_supply_register(tps->dev, &tps->psy_desc, &psy_cfg);
 	return PTR_ERR_OR_ZERO(tps->psy);
 }
 
-static int
-tps6598x_register_port(struct tps6598x *tps, struct fwnode_handle *fwnode)
+static int tps6598x_register_port(struct tps6598x *tps,
+				  struct fwnode_handle *fwnode)
 {
 	int ret;
 	u32 conf;
-	struct typec_capability typec_cap = { };
+	struct typec_capability typec_cap = {};
 
 	ret = tps6598x_read32(tps, TPS_REG_SYSTEM_CONF, &conf);
 	if (ret)
@@ -896,7 +896,8 @@ tps6598x_register_port(struct tps6598x *tps, struct fwnode_handle *fwnode)
 	return 0;
 }
 
-static int tps_request_firmware(struct tps6598x *tps, const struct firmware **fw,
+static int tps_request_firmware(struct tps6598x *tps,
+				const struct firmware **fw,
 				const char **firmware_name)
 {
 	int ret;
@@ -908,7 +909,8 @@ static int tps_request_firmware(struct tps6598x *tps, const struct firmware **fw
 
 	ret = request_firmware(fw, *firmware_name, tps->dev);
 	if (ret) {
-		dev_err(tps->dev, "failed to retrieve \"%s\"\n", *firmware_name);
+		dev_err(tps->dev, "failed to retrieve \"%s\"\n",
+			*firmware_name);
 		return ret;
 	}
 
@@ -920,9 +922,8 @@ static int tps_request_firmware(struct tps6598x *tps, const struct firmware **fw
 	return ret;
 }
 
-static int
-tps25750_write_firmware(struct tps6598x *tps,
-			u8 bpms_addr, const u8 *data, size_t len)
+static int tps25750_write_firmware(struct tps6598x *tps, u8 bpms_addr,
+				   const u8 *data, size_t len)
 {
 	struct i2c_client *client = to_i2c_client(tps->dev);
 	int ret;
@@ -947,14 +948,13 @@ tps25750_write_firmware(struct tps6598x *tps,
 	return ret;
 }
 
-static int
-tps25750_exec_pbms(struct tps6598x *tps, u8 *in_data, size_t in_len)
+static int tps25750_exec_pbms(struct tps6598x *tps, u8 *in_data, size_t in_len)
 {
 	int ret;
 	u8 rc;
 
-	ret = tps6598x_exec_cmd_tmo(tps, "PBMs", in_len, in_data,
-				    sizeof(rc), &rc, 4000, 0);
+	ret = tps6598x_exec_cmd_tmo(tps, "PBMs", in_len, in_data, sizeof(rc),
+				    &rc, 4000, 0);
 	if (ret)
 		return ret;
 
@@ -1056,7 +1056,7 @@ static int tps25750_complete_patch_process(struct tps6598x *tps)
 {
 	int ret;
 	u8 out_data[40];
-	u8 dummy[2] = { };
+	u8 dummy[2] = {};
 
 	/*
 	 * Without writing something to DATA_IN, this command would
@@ -1068,8 +1068,7 @@ static int tps25750_complete_patch_process(struct tps6598x *tps)
 		return ret;
 
 	if (out_data[TPS_PBMC_RC]) {
-		dev_err(tps->dev,
-			"%s: pbmc failed: %u\n", __func__,
+		dev_err(tps->dev, "%s: pbmc failed: %u\n", __func__,
 			out_data[TPS_PBMC_RC]);
 		return -EIO;
 	}
@@ -1133,7 +1132,8 @@ wait_for_app:
 	if (status & TPS_BOOT_STATUS_DEAD_BATTERY_FLAG) {
 		ret = tps6598x_exec_cmd(tps, "DBfg", 0, NULL, 0, NULL);
 		if (ret) {
-			dev_err(tps->dev, "failed to clear dead battery %d\n", ret);
+			dev_err(tps->dev, "failed to clear dead battery %d\n",
+				ret);
 			return ret;
 		}
 	}
@@ -1146,7 +1146,7 @@ wait_for_app:
 static int tps6598x_apply_patch(struct tps6598x *tps)
 {
 	u8 in = TPS_PTCS_CONTENT_DEV | TPS_PTCS_CONTENT_APP;
-	u8 out[TPS_MAX_LEN] = {0};
+	u8 out[TPS_MAX_LEN] = { 0 };
 	size_t in_len = sizeof(in);
 	size_t copied_bytes = 0;
 	size_t bytes_left;
@@ -1158,8 +1158,8 @@ static int tps6598x_apply_patch(struct tps6598x *tps)
 	if (ret)
 		return ret;
 
-	ret = tps6598x_exec_cmd(tps, "PTCs", in_len, &in,
-				TPS_PTCS_OUT_BYTES, out);
+	ret = tps6598x_exec_cmd(tps, "PTCs", in_len, &in, TPS_PTCS_OUT_BYTES,
+				out);
 	if (ret || out[TPS_PTCS_STATUS] == TPS_PTCS_STATUS_FAIL) {
 		if (!ret)
 			ret = -EBUSY;
@@ -1204,23 +1204,24 @@ release_fw:
 	return ret;
 }
 
-static u32 cd321x_get_key(struct tps6598x *tps) 
+static u32 cd321x_get_key(struct tps6598x *tps)
 {
 	int ret;
 	const char *dt_entry;
 	struct device_node *dt_root;
 
 	dt_root = of_find_node_opts_by_path("/", NULL);
-	ret = of_property_read_string_index(dt_root, "compatible", 0, &dt_entry);
+	ret = of_property_read_string_index(dt_root, "compatible", 0,
+					    &dt_entry);
 	if (ret) {
 		dev_err(tps->dev, "Failed reading device tree");
 		return -EINVAL;
 	}
-	else {
-		dev_info(tps->dev, "Returned model string: %s\n", dt_entry);
-	}
 
-	if (strlen(dt_entry) != 10) {
+	dev_info(tps->dev, "Deriving ACE unlock key using model string: %s\n", dt_entry);
+
+
+	if (strlen(dt_entry) < 10) {
 		dev_err(tps->dev, "Device tree returned string of unexpected length");
 		return -EINVAL;
 	}
@@ -1236,60 +1237,58 @@ static int cd321x_unlock(struct tps6598x *tps)
 
 	key = cd321x_get_key(tps);
 
-	if (!key) {
-		dev_err(tps->dev, "Could not fetch device unlock key");
+	if (key < 0)
 		return -EINVAL;
-	}
 
 	ret = tps6598x_exec_cmd(tps, "LOCK", sizeof(key), (u8 *)&key, 0, NULL);
 
 	if (ret) {
-	    dev_err(tps->dev, "Unlock command failed or device is already unlocked");
-	    dev_err(tps->dev, "%d", ret);
-	    return -EIO;
+		dev_err(tps->dev, "Unlock command failed or device is already unlocked: %d", ret);
+		return -EIO;
 	}
 	return 0;
 }
 
-
-static int cd321x_set_dbma(struct tps6598x *tps) 
+static int cd321x_set_dbma(struct tps6598x *tps)
 {
-        int ret;
+	int ret;
 	int mode;
 
-        ret = tps6598x_exec_cmd(tps, "DBMa", 1, "\x01", 0, NULL);
+	ret = tps6598x_exec_cmd(tps, "DBMa", 1, "\x01", 0, NULL);
+
+	if (ret)
+		return -EIO;
+
 	mode = tps6598x_check_mode(tps);
-	
-	if (mode == CD_MODE_DBMA) {
+
+	if (mode == CD_MODE_DBMA)
 		return 0;
-	}
-	else {	
-		dev_err(tps->dev, "CD321x failed to enter DBMa mode, device is likely in locked state");
-		return -EINVAL;
-	     }
-	
+
+	dev_err(tps->dev, "CD321x failed to enter DBMa mode, device is likely in locked state");
+	return -EINVAL;
+
 }
 
+
+#define VDM_HEADER 0x33
 static int cd321x_vdm(struct tps6598x *tps, u32 *msg, size_t vdm_len)
 {
-        int ret;
-		
-        u8 vdm[13];
-        u8 header = 0x33;
-	
-        memcpy(&vdm[0], &header, 1);
-        memcpy(&vdm[1], msg, vdm_len);	
+	int ret;
+	u8 vdm[13];
 
-        ret = tps6598x_exec_cmd(tps, "VDMs", vdm_len + 1, &vdm[0], 0, NULL);
-	
+	vdm[0] = VDM_HEADER;
+	memcpy(&vdm[1], msg, vdm_len);
+
+	ret = tps6598x_exec_cmd_tmo(tps, "VDMs", vdm_len + 1, &vdm[0], 0, NULL, 200, 200);
+
 	if (ret) {
-	    dev_err(tps->dev, "Sending VDM failed: %d", ret);
-	    return -EIO;
+		dev_err(tps->dev, "Sending VDM failed: %d", ret);
+		return -EIO;
 	}
 	return 0;
 }
 
-static int cd321x_serial(struct tps6598x *tps) 
+static int cd321x_serial(struct tps6598x *tps)
 {
 	int ret;
 	u32 key = 0x1840306;
@@ -1302,59 +1301,71 @@ static int cd321x_serial(struct tps6598x *tps)
 		return -EIO;
 	}
 	return 0;
-
 }
 static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
-			 char *buf)
+			   char *buf)
 {
-	//TODO: add output here
-	return sysfs_emit(buf,"0\n");
+	return sysfs_emit(buf, "0\n");
 }
 
 static ssize_t serial_store(struct device *dev, struct device_attribute *attr,
-			  const char *buf, size_t count)
+			    const char *buf, size_t count)
 {
-	
 	struct i2c_client *client = to_i2c_client(dev);
 	struct tps6598x *tps = i2c_get_clientdata(client);
 	int ret;
 
-	u32 vdm[] = {0x5ac8012, 0x1840306};
+	u32 vdm[] = { 0x5ac8012, 0x1840306 };
 
 	ret = cd321x_unlock(tps);
+	if (ret)
+		return ret;
+
 	ret = cd321x_set_dbma(tps);
+	if (ret)
+		return ret;
+
 	ret = cd321x_vdm(tps, vdm, sizeof(vdm));
+	if (ret)
+		return ret;
 
 	dev_info(tps->dev, "Attempting to enter local serial");
-        cd321x_serial(tps); 		
+	cd321x_serial(tps);
 	return count;
+
 }
 
 static DEVICE_ATTR_RW(serial);
 
 static ssize_t reboot_show(struct device *dev, struct device_attribute *attr,
-			 char *buf)
+			   char *buf)
 {
-	return sysfs_emit(buf,"0\n");
+	return sysfs_emit(buf, "0\n");
 }
 
 static ssize_t reboot_store(struct device *dev, struct device_attribute *attr,
-			  const char *buf, size_t count)
+			    const char *buf, size_t count)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct tps6598x *tps = i2c_get_clientdata(client);
- 
-	//u32 vdm[] = {0x5ac8012, 0x840306}; //VDM for entering DFU mode
-	u32 vdm[] = {0x5ac8012, 0x105, 0x80000000};
-	cd321x_unlock(tps);
-	cd321x_set_dbma(tps);
-	cd321x_vdm(tps, vdm, sizeof(vdm));
+	int ret;
 
+	u32 vdm[] = { 0x5ac8012, 0x105, 0x80000000 };
+
+	ret = cd321x_unlock(tps);
+	if (ret)
+		return ret;
+	ret = cd321x_set_dbma(tps);
+	if (ret)
+		return ret;
+	ret = cd321x_vdm(tps, vdm, sizeof(vdm));
+	if (ret)
+		return ret;
 	return count;
+
 }
 
 static DEVICE_ATTR_RW(reboot);
-
 
 static struct attribute *vdm_attrs[] = {
 	&dev_attr_serial.attr,
@@ -1363,12 +1374,9 @@ static struct attribute *vdm_attrs[] = {
 };
 
 static const struct attribute_group vdm_group = {
-        .name = "cd321x_vdm",
+	.name = "apple_vdm",
 	.attrs = vdm_attrs,
-
 };
-
-
 
 static int cd321x_init(struct tps6598x *tps)
 {
@@ -1386,8 +1394,7 @@ static int tps25750_init(struct tps6598x *tps)
 	ret = tps6598x_write8(tps, TPS_REG_SLEEP_CONF,
 			      TPS_SLEEP_CONF_SLEEP_MODE_ALLOWED);
 	if (ret)
-		dev_warn(tps->dev,
-			 "%s: failed to enable sleep mode: %d\n",
+		dev_warn(tps->dev, "%s: failed to enable sleep mode: %d\n",
 			 __func__, ret);
 
 	return 0;
@@ -1400,7 +1407,6 @@ static int tps6598x_init(struct tps6598x *tps)
 
 static int cd321x_reset(struct tps6598x *tps)
 {
-
 	return 0;
 }
 
@@ -1414,10 +1420,10 @@ static int tps6598x_reset(struct tps6598x *tps)
 	return 0;
 }
 
-static int
-tps25750_register_port(struct tps6598x *tps, struct fwnode_handle *fwnode)
+static int tps25750_register_port(struct tps6598x *tps,
+				  struct fwnode_handle *fwnode)
 {
-	struct typec_capability typec_cap = { };
+	struct typec_capability typec_cap = {};
 	const char *data_role;
 	u8 pd_status;
 	int ret;
@@ -1520,20 +1526,10 @@ static int tps6598x_probe(struct i2c_client *client)
 			APPLE_CD_REG_INT_DATA_STATUS_UPDATE |
 			APPLE_CD_REG_INT_PLUG_EVENT;
 
-
 	} else {
 		/* Enable power status, data status and plug event interrupts */
 		mask1 = TPS_REG_INT_POWER_STATUS_UPDATE |
-			TPS_REG_INT_DATA_STATUS_UPDATE |
-			TPS_REG_INT_PLUG_EVENT;
-	}
-
-	if (device_is_compatible(tps->dev, "apple,cd321x")) {
-		int err;
-		err = sysfs_create_group(&client->dev.kobj, &vdm_group);
-		if (err < 0) {
-			dev_err(tps->dev, "Couldn't register sysfs group for CD321x VDMs\n");
-		}
+			TPS_REG_INT_DATA_STATUS_UPDATE | TPS_REG_INT_PLUG_EVENT;
 	}
 
 	tps->data = i2c_get_match_data(client);
@@ -1586,9 +1582,11 @@ static int tps6598x_probe(struct i2c_client *client)
 		goto err_role_put;
 
 	if (status & TPS_STATUS_PLUG_PRESENT) {
-		ret = tps6598x_read16(tps, TPS_REG_POWER_STATUS, &tps->pwr_status);
+		ret = tps6598x_read16(tps, TPS_REG_POWER_STATUS,
+				      &tps->pwr_status);
 		if (ret < 0) {
-			dev_err(tps->dev, "failed to read power status: %d\n", ret);
+			dev_err(tps->dev, "failed to read power status: %d\n",
+				ret);
 			goto err_unregister_port;
 		}
 		ret = tps6598x_connect(tps, status);
@@ -1602,7 +1600,9 @@ static int tps6598x_probe(struct i2c_client *client)
 						IRQF_SHARED | IRQF_ONESHOT,
 						dev_name(&client->dev), tps);
 	} else {
-		dev_warn(tps->dev, "Unable to find the interrupt, switching to polling\n");
+		dev_warn(
+			tps->dev,
+			"Unable to find the interrupt, switching to polling\n");
 		INIT_DELAYED_WORK(&tps->wq_poll, tps6598x_poll_work);
 		queue_delayed_work(system_power_efficient_wq, &tps->wq_poll,
 				   msecs_to_jiffies(POLL_INTERVAL));
@@ -1618,6 +1618,14 @@ static int tps6598x_probe(struct i2c_client *client)
 	if (tps->wakeup && client->irq) {
 		device_init_wakeup(&client->dev, true);
 		enable_irq_wake(client->irq);
+	}
+
+	if (tps->data->enable_apple_vdm == true) {
+		ret = sysfs_create_group(&client->dev.kobj, &vdm_group);
+		if (ret < 0) {
+			dev_err(tps->dev,
+				"Couldn't register sysfs group for Apple VDM support\n");
+		}
 	}
 
 	return 0;
@@ -1654,9 +1662,8 @@ static void tps6598x_remove(struct i2c_client *client)
 
 	/* Reset PD controller to remove any applied patch */
 	tps->data->reset(tps);
-	if (device_is_compatible(tps->dev, "apple,cd321x"))  {
+	if (tps->data->enable_apple_vdm)
 		sysfs_remove_group(&client->dev.kobj, &vdm_group);
-	}
 
 	if (tps->reset)
 		gpiod_set_value_cansleep(tps->reset, 1);
@@ -1711,9 +1718,8 @@ static int __maybe_unused tps6598x_resume(struct device *dev)
 	return 0;
 }
 
-static const struct dev_pm_ops tps6598x_pm_ops = {
-	SET_SYSTEM_SLEEP_PM_OPS(tps6598x_suspend, tps6598x_resume)
-};
+static const struct dev_pm_ops tps6598x_pm_ops = { SET_SYSTEM_SLEEP_PM_OPS(
+	tps6598x_suspend, tps6598x_resume) };
 
 static const struct tipd_data cd321x_data = {
 	.irq_handler = cd321x_interrupt,
@@ -1722,6 +1728,7 @@ static const struct tipd_data cd321x_data = {
 	.trace_status = trace_tps6598x_status,
 	.init = cd321x_init,
 	.reset = cd321x_reset,
+	.enable_apple_vdm = true,
 };
 
 static const struct tipd_data tps6598x_data = {
@@ -1745,16 +1752,16 @@ static const struct tipd_data tps25750_data = {
 };
 
 static const struct of_device_id tps6598x_of_match[] = {
-	{ .compatible = "ti,tps6598x", &tps6598x_data},
-	{ .compatible = "apple,cd321x", &cd321x_data},
-	{ .compatible = "ti,tps25750", &tps25750_data},
+	{ .compatible = "ti,tps6598x", &tps6598x_data },
+	{ .compatible = "apple,cd321x", &cd321x_data },
+	{ .compatible = "ti,tps25750", &tps25750_data },
 	{}
 };
 MODULE_DEVICE_TABLE(of, tps6598x_of_match);
 
 static const struct i2c_device_id tps6598x_id[] = {
 	{ "tps6598x", (kernel_ulong_t)&tps6598x_data },
-	{ }
+	{}
 };
 MODULE_DEVICE_TABLE(i2c, tps6598x_id);
 
